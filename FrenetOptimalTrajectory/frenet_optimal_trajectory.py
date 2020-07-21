@@ -19,6 +19,8 @@ import math
 import cubic_spline_planner
 import sys
 import os
+import pandas as pd
+
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
                 "/../QuinticPolynomialsPlanner/")
@@ -265,9 +267,12 @@ def generate_target_course(x, y):
 def main():
     print(__file__ + " start!!")
 
+    data = pd.read_csv(r"..\软件大赛——极速赛道规划控制\saic_2020.csv")
+    x_data = data['x']
+    y_data = data['y']
     # way points
-    wx = [0.0, 10.0, 20.5, 35.0, 70.5]
-    wy = [0.0, -6.0, 5.0, 6.5, 0.0]
+    wx = x_data
+    wy = y_data
     # obstacle lists
     ob = np.array([[20.0, 10.0],
                    [30.0, 6.0],
@@ -285,7 +290,7 @@ def main():
     c_d_dd = 0.0  # current latral acceleration [m/s]
     s0 = 0.0  # current course position
 
-    area = 20.0  # animation area length [m]
+    area = 50.0  # animation area length [m]
 
     for i in range(SIM_LOOP):
         path = frenet_optimal_planning(

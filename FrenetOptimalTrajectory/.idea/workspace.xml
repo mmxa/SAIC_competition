@@ -2,11 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="25786e1c-1eda-4091-b1f7-e137fbdcb425" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/cubic_spline_planner.py" beforeDir="false" afterPath="$PROJECT_DIR$/cubic_spline_planner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frenet_optimal_trajectory.py" beforeDir="false" afterPath="$PROJECT_DIR$/frenet_optimal_trajectory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../HybridAStar/car.py" beforeDir="false" afterPath="$PROJECT_DIR$/../HybridAStar/car.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../HybridAStar/hybrid_a_star.py" beforeDir="false" afterPath="$PROJECT_DIR$/../HybridAStar/hybrid_a_star.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../QuinticPolynomialsPlanner/quintic_polynomials_planner.py" beforeDir="false" afterPath="$PROJECT_DIR$/../QuinticPolynomialsPlanner/quintic_polynomials_planner.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -14,7 +12,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+    <option name="RECENT_GIT_ROOT_PATH" value="$github$/SAIC2020/SAIC_competition" />
   </component>
   <component name="ProjectId" id="1dsmGEzcTCx2JoTDJREKcDCNthI" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -78,11 +76,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../QuinticPolynomialsPlanner" />
+      <option name="WORKING_DIRECTORY" value="$github$/SAIC2020/SAIC_competition/QuinticPolynomialsPlanner" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../QuinticPolynomialsPlanner/quintic_polynomials_planner.py" />
+      <option name="SCRIPT_NAME" value="$github$/SAIC2020/SAIC_competition/QuinticPolynomialsPlanner/quintic_polynomials_planner.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -113,38 +111,38 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1442" height="57" key="GridCell.Tab.0.bottom" timestamp="1593352193279">
+    <state width="1442" height="222" key="GridCell.Tab.0.bottom" timestamp="1595299495942">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="57" key="GridCell.Tab.0.bottom/0.0.1463.874@0.0.1463.874" timestamp="1593352193279" />
-    <state width="1442" height="57" key="GridCell.Tab.0.center" timestamp="1593352193279">
+    <state width="1442" height="222" key="GridCell.Tab.0.bottom/0.0.1463.874@0.0.1463.874" timestamp="1595299495942" />
+    <state width="1442" height="222" key="GridCell.Tab.0.center" timestamp="1595299495942">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="57" key="GridCell.Tab.0.center/0.0.1463.874@0.0.1463.874" timestamp="1593352193279" />
-    <state width="1442" height="57" key="GridCell.Tab.0.left" timestamp="1593352193279">
+    <state width="1442" height="222" key="GridCell.Tab.0.center/0.0.1463.874@0.0.1463.874" timestamp="1595299495942" />
+    <state width="1442" height="222" key="GridCell.Tab.0.left" timestamp="1595299495942">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="57" key="GridCell.Tab.0.left/0.0.1463.874@0.0.1463.874" timestamp="1593352193279" />
-    <state width="1442" height="57" key="GridCell.Tab.0.right" timestamp="1593352193279">
+    <state width="1442" height="222" key="GridCell.Tab.0.left/0.0.1463.874@0.0.1463.874" timestamp="1595299495942" />
+    <state width="1442" height="222" key="GridCell.Tab.0.right" timestamp="1595299495942">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="57" key="GridCell.Tab.0.right/0.0.1463.874@0.0.1463.874" timestamp="1593352193279" />
-    <state width="1442" height="281" key="GridCell.Tab.1.bottom" timestamp="1593352193267">
+    <state width="1442" height="222" key="GridCell.Tab.0.right/0.0.1463.874@0.0.1463.874" timestamp="1595299495942" />
+    <state width="1442" height="281" key="GridCell.Tab.1.bottom" timestamp="1595299372366">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="281" key="GridCell.Tab.1.bottom/0.0.1463.874@0.0.1463.874" timestamp="1593352193267" />
-    <state width="1442" height="281" key="GridCell.Tab.1.center" timestamp="1593352193267">
+    <state width="1442" height="281" key="GridCell.Tab.1.bottom/0.0.1463.874@0.0.1463.874" timestamp="1595299372366" />
+    <state width="1442" height="281" key="GridCell.Tab.1.center" timestamp="1595299372366">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="281" key="GridCell.Tab.1.center/0.0.1463.874@0.0.1463.874" timestamp="1593352193267" />
-    <state width="1442" height="281" key="GridCell.Tab.1.left" timestamp="1593352193267">
+    <state width="1442" height="281" key="GridCell.Tab.1.center/0.0.1463.874@0.0.1463.874" timestamp="1595299372366" />
+    <state width="1442" height="281" key="GridCell.Tab.1.left" timestamp="1595299372366">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="281" key="GridCell.Tab.1.left/0.0.1463.874@0.0.1463.874" timestamp="1593352193267" />
-    <state width="1442" height="281" key="GridCell.Tab.1.right" timestamp="1593352193267">
+    <state width="1442" height="281" key="GridCell.Tab.1.left/0.0.1463.874@0.0.1463.874" timestamp="1595299372366" />
+    <state width="1442" height="281" key="GridCell.Tab.1.right" timestamp="1595299372366">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="281" key="GridCell.Tab.1.right/0.0.1463.874@0.0.1463.874" timestamp="1593352193267" />
+    <state width="1442" height="281" key="GridCell.Tab.1.right/0.0.1463.874@0.0.1463.874" timestamp="1595299372366" />
     <state width="498" height="446" key="SwitcherDM" timestamp="1593312843887">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
@@ -167,8 +165,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/frenet_optimal_trajectory.py</url>
-          <line>261</line>
+          <line>263</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/frenet_optimal_trajectory.py</url>
+          <line>273</line>
+          <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
