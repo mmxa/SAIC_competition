@@ -176,6 +176,20 @@ class Spline2D:
         yaw = math.atan2(dy, dx)
         return yaw
 
+    def calc_tangent_vector(self, s):
+        """
+        calc tangent vector
+        """
+        theta = self.calc_yaw(s)
+        return [math.cos(theta), math.sin(theta)]
+
+    def calc_norm(self, s):
+        """
+        calc norm vector
+        """
+        theta = self.calc_yaw(s) + math.pi/2.0
+        return [math.cos(theta), math.sin(theta)]
+
 
 def calc_spline_course(x, y, ds=0.1):
     sp = Spline2D(x, y)

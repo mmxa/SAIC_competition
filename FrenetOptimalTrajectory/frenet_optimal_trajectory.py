@@ -21,7 +21,6 @@ import sys
 import os
 import pandas as pd
 
-
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
                 "/../QuinticPolynomialsPlanner/")
 
@@ -30,19 +29,18 @@ try:
 except ImportError:
     raise
 
-
 SIM_LOOP = 500
 
 # Parameter
-MAX_SPEED = 50.0 / 3.6  # maximum speed [m/s]
-MAX_ACCEL = 2.0  # maximum acceleration [m/ss]
+MAX_SPEED = 70.0 / 3.6  # maximum speed [m/s]
+MAX_ACCEL = 4.0  # maximum acceleration [m/ss]
 MAX_CURVATURE = 1.0  # maximum curvature [1/m]
 MAX_ROAD_WIDTH = 7.0  # maximum road width [m]
 D_ROAD_W = 1.0  # road width sampling length [m]
 DT = 0.2  # time tick [s]
 MAXT = 5.0  # max prediction time [m]
 MINT = 4.0  # min prediction time [m]
-TARGET_SPEED = 30.0 / 3.6  # target speed [m/s]
+TARGET_SPEED = 50.0 / 3.6  # target speed [m/s]
 D_T_S = 5.0 / 3.6  # target speed sampling length [m/s]
 N_S_SAMPLE = 1  # sampling number of target speed
 ROBOT_RADIUS = 2.0  # robot radius [m]
@@ -60,7 +58,6 @@ show_animation = True
 class quartic_polynomial:
 
     def __init__(self, xs, vxs, axs, vxe, axe, T):
-
         # calc coefficient of quartic polynomial
 
         self.a0 = xs
@@ -77,19 +74,19 @@ class quartic_polynomial:
         self.a4 = x[1]
 
     def calc_point(self, t):
-        xt = self.a0 + self.a1 * t + self.a2 * t**2 + \
-            self.a3 * t**3 + self.a4 * t**4
+        xt = self.a0 + self.a1 * t + self.a2 * t ** 2 + \
+             self.a3 * t ** 3 + self.a4 * t ** 4
 
         return xt
 
     def calc_first_derivative(self, t):
         xt = self.a1 + 2 * self.a2 * t + \
-            3 * self.a3 * t**2 + 4 * self.a4 * t**3
+             3 * self.a3 * t ** 2 + 4 * self.a4 * t ** 3
 
         return xt
 
     def calc_second_derivative(self, t):
-        xt = 2 * self.a2 + 6 * self.a3 * t + 12 * self.a4 * t**2
+        xt = 2 * self.a2 + 6 * self.a3 * t + 12 * self.a4 * t ** 2
 
         return xt
 
@@ -123,7 +120,6 @@ class Frenet_path:
 
 
 def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
-
     frenet_paths = []
 
     # generate path to each offset goal
@@ -156,9 +152,9 @@ def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
                 Js = sum(np.power(tfp.s_ddd, 2))  # square of jerk
 
                 # square of diff from target speed
-                ds = (TARGET_SPEED - tfp.s_d[-1])**2
+                ds = (TARGET_SPEED - tfp.s_d[-1]) ** 2
 
-                tfp.cd = KJ * Jp + KT * Ti + KD * tfp.d[-1]**2
+                tfp.cd = KJ * Jp + KT * Ti + KD * tfp.d[-1] ** 2
                 tfp.cv = KJ * Js + KT * Ti + KD * ds
                 tfp.cf = KLAT * tfp.cd + KLON * tfp.cv
 
@@ -168,7 +164,6 @@ def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
 
 
 def calc_global_paths(fplist, csp):
-
     for fp in fplist:
 
         # calc global positions
@@ -201,12 +196,11 @@ def calc_global_paths(fplist, csp):
 
 
 def check_collision(fp, ob):
-
     for i in range(len(ob[:, 0])):
-        d = [((ix - ob[i, 0])**2 + (iy - ob[i, 1])**2)
+        d = [((ix - ob[i, 0]) ** 2 + (iy - ob[i, 1]) ** 2)
              for (ix, iy) in zip(fp.x, fp.y)]
 
-        collision = any([di <= ROBOT_RADIUS**2 for di in d])
+        collision = any([di <= ROBOT_RADIUS ** 2 for di in d])
 
         if collision:
             return False
@@ -215,7 +209,6 @@ def check_collision(fp, ob):
 
 
 def check_paths(fplist, ob):
-
     okind = []
     for i, _ in enumerate(fplist):
         if any([v > MAX_SPEED for v in fplist[i].s_d]):  # Max speed check
@@ -233,7 +226,6 @@ def check_paths(fplist, ob):
 
 
 def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob):
-
     fplist = calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0)
     fplist = calc_global_paths(fplist, csp)
     fplist = check_paths(fplist, ob)
@@ -251,10 +243,10 @@ def frenet_optimal_planning(csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob):
 
 def generate_target_course(x, y):
     csp = cubic_spline_planner.Spline2D(x, y)
-    s = np.arange(0, csp.s[-1], 0.1)
+    s = np.arange(0, csp.s[-1], 1)
 
     rx, ry, ryaw, rk = [], [], [], []
-    for i_s in s:   # 利用离散点x、y生成一条关于路程s的曲线？ 然后离散成x、y、yaw、curvature
+    for i_s in s:  # 利用离散点x、y生成一条关于路程s的曲线？ 然后离散成x、y、yaw、curvature
         ix, iy = csp.calc_position(i_s)
         rx.append(ix)
         ry.append(iy)
@@ -262,6 +254,32 @@ def generate_target_course(x, y):
         rk.append(csp.calc_curvature(i_s))
 
     return rx, ry, ryaw, rk, csp
+
+
+def generate_coarse_course(x, y):
+    csp = cubic_spline_planner.Spline2D(x, y)
+    s = np.arange(0, csp.s[-1], 2)  # 2m取一个间隔点，利用dp进行基于reference line的轨迹优化， 并保证一定的计算速度
+
+    rx, ry, ryaw, rk = [], [], [], []
+    for i_s in s:  # 利用离散点x、y生成一条关于路程s的曲线？ 然后离散成x、y、yaw、curvature
+        ix, iy = csp.calc_position(i_s)
+        rx.append(ix)
+        ry.append(iy)
+        ryaw.append(csp.calc_yaw(i_s))
+        rk.append(csp.calc_curvature(i_s))
+
+    return rx, ry, ryaw, rk, csp
+
+
+class point:
+    def __init__(self, x, y, parent=None, cost=10 ** 18, rtheta=0):
+        self.x = x
+        self.y = y
+        self.cost = cost
+        self.tangent = [math.cos(rtheta), math.sin(rtheta)]
+        self.parent = parent
+        if parent == None:
+            self.tangent = [math.cos(rtheta), math.sin(rtheta)]
 
 
 def main():
@@ -281,11 +299,64 @@ def main():
                    [50.0, 3.0]
                    ])
 
-    tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
+    tx, ty, tyaw, tc, csp = generate_coarse_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
+    # tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
+    tx_ori, ty_ori, tyaw_ori, tc_ori, csp_ori = generate_target_course(wx, wy)
+    lateral_cand = [0, -0.5, 0.5, -1, 1, 1.5, -1.5, -2, 2, -2.5, 2.5 -3, 3]  # lateral distance candidate
+
+    initial_norm = csp.calc_norm(0.01)
+    dp = [[point(tx[0] + x * initial_norm[0], ty[0] + x * initial_norm[1], cost=0, rtheta=tyaw[0]) for x in lateral_cand]]
+    delta_s = 4.0  # sampling density
+    total_s = delta_s
+    w_coarse = 0.95
+    while total_s < csp.s[-1]:
+        norm_vec = csp.calc_norm(total_s)
+        ref_x, ref_y = csp.calc_position(total_s)
+        temp = []
+        for ind, lat_offset in enumerate(lateral_cand):
+            temp_x = ref_x + norm_vec[0] * lat_offset
+            temp_y = ref_y + norm_vec[1] * lat_offset
+            cur_cost = 10 ** 18
+            cur_route = point(temp_x, temp_y)
+            for ind_2 in range(len(lateral_cand)):
+                # calc cost from parent node to current node
+                par_x = dp[-1][ind_2].x
+                par_y = dp[-1][ind_2].y
+                dis = np.hypot(temp_x-par_x, temp_y-par_y)
+                tangent = [(temp_x-par_x)/dis, (temp_y-par_y)/dis]
+                acosvalue = tangent[0] * dp[-1][ind_2].tangent[0] + tangent[1] * dp[-1][ind_2].tangent[1]
+                if abs(acosvalue) > 1.0:
+                    acosvalue = 1.0 * np.sign(acosvalue)
+                temp_cost = w_coarse * math.acos(acosvalue)+ dp[-1][ind_2].cost + 0.05* dis * (1-w_coarse)
+                if temp_cost < cur_cost:
+                    cur_cost = temp_cost
+                    cur_route.tangent = tangent
+                    cur_route.cost = temp_cost
+                    cur_route.parent = ind_2
+            temp.append(cur_route)
+        dp.append(temp)
+        total_s += delta_s
+
+    x_points = []
+    y_points = []
+    cur_node = max(dp[-1], key=lambda x:x.cost)
+    cur_node_n = -1
+    while cur_node.parent is not None:
+        x_points.append(cur_node.x)
+        y_points.append(cur_node.y)
+        cur_node_n -= 1
+        cur_node = dp[cur_node_n][cur_node.parent]
+    x_points.append(cur_node.x)
+    y_points.append(cur_node.y)
+    x_points.reverse()
+    y_points.reverse()
+    tx_opt, ty_opt, tyaw_opt, tc_opt, csp_opt = generate_coarse_course(x_points, y_points)
+    plt.plot(tx_opt, ty_opt, 'r-', tx_ori, ty_ori, 'b-')
+    plt.show()
 
     # initial state
-    c_speed = 20.0 / 3.6  # current speed [m/s]
-    c_d = 2.0  # current lateral position [m]
+    c_speed = 40.0 / 3.6  # current speed [m/s]
+    c_d = 0.0  # current lateral position [m]
     c_d_d = 0.0  # current lateral speed [m/s]
     c_d_dd = 0.0  # current latral acceleration [m/s]
     s0 = 0.0  # current course position
@@ -310,7 +381,7 @@ def main():
             plt.cla()
             # for stopping simulation with the esc key.
             plt.gcf().canvas.mpl_connect('key_release_event',
-                    lambda event: [exit(0) if event.key == 'escape' else None])
+                                         lambda event: [exit(0) if event.key == 'escape' else None])
             plt.plot(tx, ty)
             plt.plot(ob[:, 0], ob[:, 1], "xk")
             plt.plot(path.x[1:], path.y[1:], "-or")
