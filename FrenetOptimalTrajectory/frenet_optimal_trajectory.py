@@ -271,11 +271,20 @@ def generate_coarse_course(x, y):
     return rx, ry, ryaw, rk, csp
 
 
+def project_to_cur(cur_x, cur_y, cur_theta, tar_x, tar_y):
+    delta_x = tar_x - cur_x
+    delta_y = tar_y - cur_y
+    rel_x = delta_y * math.sin(cur_theta) + delta_x * math.cos(cur_theta)
+    rel_y = delta_y * math.cos(cur_theta) - delta_x * math.sin(cur_theta)
+    return rel_x, rel_y
+
+
 class point:
-    def __init__(self, x, y, parent=None, cost=10 ** 18, rtheta=0):
+    def __init__(self, x, y, parent=None, cost=10 ** 18, rtheta=0, length=1.0):
         self.x = x
         self.y = y
         self.cost = cost
+        self.length = length
         self.tangent = [math.cos(rtheta), math.sin(rtheta)]
         self.parent = parent
         if parent == None:
@@ -292,23 +301,27 @@ def main():
     wx = x_data
     wy = y_data
     # obstacle lists
-    ob = np.array([[20.0, 10.0],
-                   [30.0, 6.0],
-                   [30.0, 8.0],
-                   [35.0, 8.0],
-                   [50.0, 3.0]
+    ob = np.array([[90.0934, 710.9762],
+                   [130.0934, 707.9762],
                    ])
+
 
     tx, ty, tyaw, tc, csp = generate_coarse_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
     # tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
     tx_ori, ty_ori, tyaw_ori, tc_ori, csp_ori = generate_target_course(wx, wy)
-    lateral_cand = [0, -0.5, 0.5, -1, 1, 1.5, -1.5, -2, 2, -2.5, 2.5 -3, 3]  # lateral distance candidate
+    lateral_cand = [0.0]
+    for x in np.linspace(-2.5, 2.5, 40):
+        lateral_cand.append(x)
+    """lateral_cand = [0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75,
+                    -1, 1, -1.25, 1.25, 1.5, -1.5, -1.75, 1.75,
+                    -2, 2, -2.25, 2.25, -2.5, 2.5 ]  # lateral distance candidate"""
 
-    initial_norm = csp.calc_norm(0.01)
-    dp = [[point(tx[0] + x * initial_norm[0], ty[0] + x * initial_norm[1], cost=0, rtheta=tyaw[0]) for x in lateral_cand]]
-    delta_s = 4.0  # sampling density
+    initial_norm = csp.calc_norm(0.0)
+    dp = [[point(tx[0] + x * initial_norm[0], ty[0] + x * initial_norm[1], cost=0, rtheta=math.pi/2) for x in lateral_cand]]
+    dp[0][0] = point(tx[0], ty[0], cost=0, rtheta=tyaw[0])
+    delta_s = 3.0  # sampling density
     total_s = delta_s
-    w_coarse = 0.95
+    w_coarse = 0.999
     while total_s < csp.s[-1]:
         norm_vec = csp.calc_norm(total_s)
         ref_x, ref_y = csp.calc_position(total_s)
@@ -324,12 +337,25 @@ def main():
                 par_y = dp[-1][ind_2].y
                 dis = np.hypot(temp_x-par_x, temp_y-par_y)
                 tangent = [(temp_x-par_x)/dis, (temp_y-par_y)/dis]
+                cur_theta = math.atan2(tangent[1], tangent[0])
+                k = [(tangent[0]-dp[-1][ind_2].tangent[0])/dis, (tangent[1]-dp[-1][ind_2].tangent[1])/dis]
+                #np.hypot(k[0], k[1])
                 acosvalue = tangent[0] * dp[-1][ind_2].tangent[0] + tangent[1] * dp[-1][ind_2].tangent[1]
+
+
                 if abs(acosvalue) > 1.0:
                     acosvalue = 1.0 * np.sign(acosvalue)
-                temp_cost = w_coarse * math.acos(acosvalue)+ dp[-1][ind_2].cost + 0.05* dis * (1-w_coarse)
+                # temp_cost = w_coarse * math.acos(acosvalue) / (dp[-1][ind_2].length + dis) + dp[-1][ind_2].cost + dis * (1-w_coarse)#
+                temp_cost = dp[-1][ind_2].cost + w_coarse * np.hypot(k[0], k[1])# dis  # * (1 - w_coarse)# 最大曲率
+                # temp_cost = dp[-1][ind_2].cost + dis #* (1 - w_coarse)# w_coarse * np.hypot(k[0], k[1]) +  # 最短路径
+
+                for i, pos in enumerate(ob):
+                    pro_x, pro_y = project_to_cur(temp_x, temp_y, cur_theta, pos[0], pos[1])
+                    if -3.0 < pro_x < 6.0 and abs(pro_y) < 3.0:
+                        temp_cost += 10**18         # 避障惩罚项
                 if temp_cost < cur_cost:
                     cur_cost = temp_cost
+                    cur_route.length = dis
                     cur_route.tangent = tangent
                     cur_route.cost = temp_cost
                     cur_route.parent = ind_2
@@ -339,7 +365,7 @@ def main():
 
     x_points = []
     y_points = []
-    cur_node = max(dp[-1], key=lambda x:x.cost)
+    cur_node = min(dp[-1], key=lambda x:x.cost)
     cur_node_n = -1
     while cur_node.parent is not None:
         x_points.append(cur_node.x)

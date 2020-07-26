@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="25786e1c-1eda-4091-b1f7-e137fbdcb425" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frenet_optimal_trajectory.py" beforeDir="false" afterPath="$PROJECT_DIR$/frenet_optimal_trajectory.py" afterDir="false" />
     </list>
@@ -89,9 +88,31 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="run_LunarLander" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="FrenetOptimalTrajectory" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$github$/Reinforcement-learning-with-tensorflow/experiments/Solve_LunarLander" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$github$/Reinforcement-learning-with-tensorflow/experiments/Solve_LunarLander/run_LunarLander.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.frenet_optimal_trajectory" />
+        <item itemvalue="Python.run_LunarLander" />
         <item itemvalue="Python.cubic_spline_planner" />
         <item itemvalue="Python.quintic_polynomials_planner" />
       </list>
@@ -111,73 +132,97 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1442" height="222" key="GridCell.Tab.0.bottom" timestamp="1595299495942">
+    <state x="543" y="157" key="#Menus_and_Toolbars" timestamp="1595667123739">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="222" key="GridCell.Tab.0.bottom/0.0.1463.874@0.0.1463.874" timestamp="1595299495942" />
-    <state width="1442" height="222" key="GridCell.Tab.0.center" timestamp="1595299495942">
+    <state x="543" y="157" key="#Menus_and_Toolbars/0.0.1463.874@0.0.1463.874" timestamp="1595667123739" />
+    <state width="1442" height="185" key="GridCell.Tab.0.bottom" timestamp="1595729229765">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="222" key="GridCell.Tab.0.center/0.0.1463.874@0.0.1463.874" timestamp="1595299495942" />
-    <state width="1442" height="222" key="GridCell.Tab.0.left" timestamp="1595299495942">
+    <state width="1442" height="185" key="GridCell.Tab.0.bottom/0.0.1463.874@0.0.1463.874" timestamp="1595729229765" />
+    <state width="1442" height="185" key="GridCell.Tab.0.center" timestamp="1595729229765">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="222" key="GridCell.Tab.0.left/0.0.1463.874@0.0.1463.874" timestamp="1595299495942" />
-    <state width="1442" height="222" key="GridCell.Tab.0.right" timestamp="1595299495942">
+    <state width="1442" height="185" key="GridCell.Tab.0.center/0.0.1463.874@0.0.1463.874" timestamp="1595729229765" />
+    <state width="1442" height="185" key="GridCell.Tab.0.left" timestamp="1595729229765">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="222" key="GridCell.Tab.0.right/0.0.1463.874@0.0.1463.874" timestamp="1595299495942" />
-    <state width="1442" height="281" key="GridCell.Tab.1.bottom" timestamp="1595299372366">
+    <state width="1442" height="185" key="GridCell.Tab.0.left/0.0.1463.874@0.0.1463.874" timestamp="1595729229765" />
+    <state width="1442" height="185" key="GridCell.Tab.0.right" timestamp="1595729229765">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="281" key="GridCell.Tab.1.bottom/0.0.1463.874@0.0.1463.874" timestamp="1595299372366" />
-    <state width="1442" height="281" key="GridCell.Tab.1.center" timestamp="1595299372366">
+    <state width="1442" height="185" key="GridCell.Tab.0.right/0.0.1463.874@0.0.1463.874" timestamp="1595729229765" />
+    <state width="1442" height="185" key="GridCell.Tab.1.bottom" timestamp="1595729229766">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="281" key="GridCell.Tab.1.center/0.0.1463.874@0.0.1463.874" timestamp="1595299372366" />
-    <state width="1442" height="281" key="GridCell.Tab.1.left" timestamp="1595299372366">
+    <state width="1442" height="185" key="GridCell.Tab.1.bottom/0.0.1463.874@0.0.1463.874" timestamp="1595729229766" />
+    <state width="1442" height="185" key="GridCell.Tab.1.center" timestamp="1595729229765">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="281" key="GridCell.Tab.1.left/0.0.1463.874@0.0.1463.874" timestamp="1595299372366" />
-    <state width="1442" height="281" key="GridCell.Tab.1.right" timestamp="1595299372366">
+    <state width="1442" height="185" key="GridCell.Tab.1.center/0.0.1463.874@0.0.1463.874" timestamp="1595729229765" />
+    <state width="1442" height="185" key="GridCell.Tab.1.left" timestamp="1595729229765">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="1442" height="281" key="GridCell.Tab.1.right/0.0.1463.874@0.0.1463.874" timestamp="1595299372366" />
+    <state width="1442" height="185" key="GridCell.Tab.1.left/0.0.1463.874@0.0.1463.874" timestamp="1595729229765" />
+    <state width="1442" height="185" key="GridCell.Tab.1.right" timestamp="1595729229766">
+      <screen x="0" y="0" width="1463" height="874" />
+    </state>
+    <state width="1442" height="185" key="GridCell.Tab.1.right/0.0.1463.874@0.0.1463.874" timestamp="1595729229766" />
+    <state x="233" y="81" key="SettingsEditor" timestamp="1595729040994">
+      <screen x="0" y="0" width="1463" height="874" />
+    </state>
+    <state x="233" y="81" key="SettingsEditor/0.0.1463.874@0.0.1463.874" timestamp="1595729040994" />
     <state width="498" height="446" key="SwitcherDM" timestamp="1593312843887">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
     <state width="498" height="446" key="SwitcherDM/0.0.1463.874@0.0.1463.874" timestamp="1593312843887" />
-    <state width="738" height="444" key="XDebugger.FullValuePopup" timestamp="1593313163371">
+    <state width="738" height="444" key="XDebugger.FullValuePopup" timestamp="1595690282711">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state width="738" height="444" key="XDebugger.FullValuePopup/0.0.1463.874@0.0.1463.874" timestamp="1593313163371" />
+    <state width="738" height="444" key="XDebugger.FullValuePopup/0.0.1463.874@0.0.1463.874" timestamp="1595690282711" />
     <state x="374" y="164" width="700" height="530" key="recent.locations.popup" timestamp="1593312825995">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
     <state x="374" y="164" width="700" height="530" key="recent.locations.popup/0.0.1463.874@0.0.1463.874" timestamp="1593312825995" />
-    <state x="394" y="184" width="672" height="678" key="search.everywhere.popup" timestamp="1593227099853">
+    <state x="394" y="184" width="672" height="678" key="search.everywhere.popup" timestamp="1595681684484">
       <screen x="0" y="0" width="1463" height="874" />
     </state>
-    <state x="394" y="184" width="672" height="678" key="search.everywhere.popup/0.0.1463.874@0.0.1463.874" timestamp="1593227099853" />
+    <state x="394" y="184" width="672" height="678" key="search.everywhere.popup/0.0.1463.874@0.0.1463.874" timestamp="1595681684484" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/frenet_optimal_trajectory.py</url>
-          <line>263</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/frenet_optimal_trajectory.py</url>
-          <line>273</line>
-          <option name="timeStamp" value="2" />
+          <line>369</line>
+          <option name="timeStamp" value="12" />
         </line-breakpoint>
       </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
         <watch expression="rk" />
+        <watch expression="ds" />
+        <watch expression="self.ds" />
+        <watch expression="s" />
+        <watch expression="tyaw" />
+        <watch expression="dp" />
+        <watch expression="w_coarse * math.acos(acosvalue)" />
+        <watch expression="tangent[1] * dp[-1][ind_2].tangent[1]" />
+        <watch expression="dis * (1-w_coarse)" />
+        <watch expression="dp[-1][ind_2].cost" />
+        <watch expression="dp[-1]" />
+        <watch expression="cur_node" />
+        <watch expression="x_points" />
+        <watch expression="y_points" />
+        <watch expression="lateral_cand" />
       </configuration>
     </watches-manager>
   </component>
