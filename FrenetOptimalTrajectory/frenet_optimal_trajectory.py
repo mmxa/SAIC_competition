@@ -20,6 +20,9 @@ import cubic_spline_planner
 import sys
 import os
 import pandas as pd
+from scipy import sparse
+import osqp
+
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
                 "/../QuinticPolynomialsPlanner/")
@@ -309,7 +312,64 @@ def main():
     tx, ty, tyaw, tc, csp = generate_coarse_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
     # tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
     tx_ori, ty_ori, tyaw_ori, tc_ori, csp_ori = generate_target_course(wx, wy)
+
+    # osqp for nearest route
+    total_dis = 0.0
+    sampling_dis = 2.0
+    sampling_num = int(csp.s[-1] // sampling_dis)
+    E = np.zeros([2, sampling_num])
+    H = np.zeros([sampling_num, sampling_num])
+    B = np.zeros([1, sampling_num])
+    next_pos = csp.calc_position(total_dis)
+    pos_s = [next_pos]
+    phi_1 = np.array(csp.calc_norm(total_dis))
+    phi_s = [phi_1]
+    for i in range(sampling_num-1):
+        cur_pos = next_pos
+        next_pos = csp.calc_position(total_dis + sampling_dis)
+        pos_s.append(next_pos)
+        delta_x = next_pos[0] - cur_pos[0]
+        delta_y = next_pos[1] - cur_pos[1]
+        E_i = np.zeros([2, sampling_num])
+        phi = phi_1
+        phi_1 = np.array(csp.calc_norm(total_dis + sampling_dis))
+        phi_s.append(phi_1)
+        phi_xi = np.array([[phi_1[0], -phi[0]]])
+        phi_yi = np.array([[phi_1[1], -phi[1]]])
+        E_i[0][i] = 1
+        E_i[1][i+1] = 1
+        B_i = 2 * delta_x * np.dot(phi_xi, E_i) + 2 * delta_y * np.dot(phi_yi, E_i)
+        H_si_t = np.dot(phi_xi.T, phi_xi) + np.dot(phi_yi.T, phi_yi)
+        H += np.dot(np.dot(E_i.T, H_si_t), E_i)
+        B += B_i
+        total_dis += sampling_dis
+    P = sparse.csc_matrix(H)
+    q = B[0]
+    A = sparse.csc_matrix(np.eye(sampling_num))
+    l = np.array([-2.5 for i in range(sampling_num)])
+    l[0] = -0.1
+    u = np.array([2.5 for i in range(sampling_num)])
+    u[0] = 0.1
+    prob = osqp.OSQP()
+
+    # Setup workspace and change alpha parameter
+    prob.setup(P, q, A, l, u, alpha=1.0)
+
+    # Solve problem
+    res = prob.solve()
+    print(res.x)
+    shortest_x = []
+    shortest_y = []
+    for i in range(sampling_num):
+        shortest_x.append(pos_s[i][0] + res.x[i] * phi_s[i][0])
+        shortest_y.append(pos_s[i][1] + res.x[i] * phi_s[i][1])
+
+
+    # dp method
     lateral_cand = [0.0]
+    tx_shortest, ty_shortest, tyaw_shortest, tc_shortest, csp_shortest = generate_target_course(shortest_x, shortest_y)
+    plt.plot(tx_shortest, ty_shortest, '-r', tx_ori, ty_ori, '-b')
+    plt.show()
     for x in np.linspace(-2.5, 2.5, 40):
         lateral_cand.append(x)
     """lateral_cand = [0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75,
