@@ -294,6 +294,81 @@ class point:
             self.tangent = [math.cos(rtheta), math.sin(rtheta)]
 
 
+def dp_plan_path(wx, wy, ob):
+    # dp method
+    tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
+    lateral_cand = [0.0]
+    for x in np.linspace(-2.5, 2.5, 40):
+        lateral_cand.append(x)
+    """lateral_cand = [0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75,
+                    -1, 1, -1.25, 1.25, 1.5, -1.5, -1.75, 1.75,
+                    -2, 2, -2.25, 2.25, -2.5, 2.5 ]  # lateral distance candidate"""
+
+    initial_norm = csp.calc_norm(0.0)
+    dp = [[point(tx[0] + x * initial_norm[0], ty[0] + x * initial_norm[1], cost=0, rtheta=math.pi / 2) for x in
+           lateral_cand]]
+    dp[0][0] = point(tx[0], ty[0], cost=0, rtheta=tyaw[0])
+    delta_s = 3.0  # sampling density
+    total_s = delta_s
+    w_coarse = 0.999
+    while total_s < csp.s[-1]:
+        norm_vec = csp.calc_norm(total_s)
+        ref_x, ref_y = csp.calc_position(total_s)
+        temp = []
+        for ind, lat_offset in enumerate(lateral_cand):
+            temp_x = ref_x + norm_vec[0] * lat_offset
+            temp_y = ref_y + norm_vec[1] * lat_offset
+            cur_cost = 10 ** 18
+            cur_route = point(temp_x, temp_y)
+            for ind_2 in range(len(lateral_cand)):
+                # calc cost from parent node to current node
+                par_x = dp[-1][ind_2].x
+                par_y = dp[-1][ind_2].y
+                dis = np.hypot(temp_x - par_x, temp_y - par_y)
+                tangent = [(temp_x - par_x) / dis, (temp_y - par_y) / dis]
+                cur_theta = math.atan2(tangent[1], tangent[0])
+                k = [(tangent[0] - dp[-1][ind_2].tangent[0]) / dis, (tangent[1] - dp[-1][ind_2].tangent[1]) / dis]
+                # np.hypot(k[0], k[1])
+                acosvalue = tangent[0] * dp[-1][ind_2].tangent[0] + tangent[1] * dp[-1][ind_2].tangent[1]
+
+                if abs(acosvalue) > 1.0:
+                    acosvalue = 1.0 * np.sign(acosvalue)
+                # temp_cost = w_coarse * math.acos(acosvalue) / (dp[-1][ind_2].length + dis) + dp[-1][ind_2].cost + dis * (1-w_coarse)#
+                temp_cost = dp[-1][ind_2].cost + w_coarse * np.hypot(k[0], k[1])  # dis  # * (1 - w_coarse)# 最大曲率
+                # temp_cost = dp[-1][ind_2].cost + dis #* (1 - w_coarse)# w_coarse * np.hypot(k[0], k[1]) +  # 最短路径
+
+                for i, pos in enumerate(ob):
+                    pro_x, pro_y = project_to_cur(temp_x, temp_y, cur_theta, pos[0], pos[1])
+                    if -3.0 < pro_x < 6.0 and abs(pro_y) < 3.0:
+                        temp_cost += 10 ** 18  # 避障惩罚项
+                if temp_cost < cur_cost:
+                    cur_cost = temp_cost
+                    cur_route.length = dis
+                    cur_route.tangent = tangent
+                    cur_route.cost = temp_cost
+                    cur_route.parent = ind_2
+            temp.append(cur_route)
+        dp.append(temp)
+        total_s += delta_s
+
+    x_points = []
+    y_points = []
+    cur_node = min(dp[-1], key=lambda x: x.cost)
+    cur_node_n = -1
+    while cur_node.parent is not None:
+        x_points.append(cur_node.x)
+        y_points.append(cur_node.y)
+        cur_node_n -= 1
+        cur_node = dp[cur_node_n][cur_node.parent]
+    x_points.append(cur_node.x)
+    y_points.append(cur_node.y)
+    x_points.reverse()
+    y_points.reverse()
+    tx_opt, ty_opt, tyaw_opt, tc_opt, csp_opt = generate_coarse_course(x_points, y_points)
+    plt.plot(tx_opt, ty_opt, 'r-', tx, ty, 'b-')
+    plt.show()
+
+
 def qp_shortest_path(wx, wy):
 
     tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
@@ -330,6 +405,7 @@ def qp_shortest_path(wx, wy):
         H += np.dot(np.dot(E_i.T, H_si_t), E_i)
         B += B_i
         total_dis += sampling_dis
+    H = H * 2
     P = sparse.csc_matrix(H)
     q = B[0]
     A = sparse.csc_matrix(np.eye(sampling_num))
@@ -351,41 +427,15 @@ def qp_shortest_path(wx, wy):
         shortest_x.append(pos_s[i][0] + res.x[i] * phi_s[i][0])
         shortest_y.append(pos_s[i][1] + res.x[i] * phi_s[i][1])
     tx_shortest, ty_shortest, tyaw_shortest, tc_shortest, csp_shortest = generate_target_course(shortest_x, shortest_y)
-    return tx_shortest, ty_shortest
+    # x,y,yaw,k,config,P,Q
+    return tx_shortest, ty_shortest, tyaw_shortest, tc_shortest, csp_shortest, H, q
     #plt.plot(tx_shortest, ty_shortest, '-r', tx_ori, ty_ori, '-b')
     #plt.show()
 
-def main():
-    print(__file__ + " start!!")
 
-    data = pd.read_csv(r"..\软件大赛——极速赛道规划控制\saic_2020.csv")
-    x_data = data['x']
-    y_data = data['y']
-    # way points
-    wx = x_data
-    wy = y_data
-    # obstacle lists
-    ob = np.array([[90.0934, 710.9762],
-                   [130.0934, 707.9762],
-                   ])
-    tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
-    tx_coarse, ty_coarse, tyaw_coarse, tc_coarse, csp_coarse = generate_coarse_course(wx, wy)
-    boundary_left_x = []
-    boundary_left_y = []
-    boundary_right_x = []
-    boundary_right_y = []
-    for i in range(len(csp_coarse.s)-1):
-        temp_pos = csp_coarse.calc_position(csp_coarse.s[i])
-        temp_norm = csp_coarse.calc_norm(csp_coarse.s[i])
-        boundary_left_x.append(temp_pos[0]+3*temp_norm[0]), boundary_left_y.append(temp_pos[1]+3*temp_norm[1])
-        boundary_right_x.append(temp_pos[0] - 3 * temp_norm[0]), boundary_right_y.append(temp_pos[1] - 3 * temp_norm[1])
-    tx_left, ty_left, tyaw_left, tc_left, csp_left = generate_target_course(boundary_left_x, boundary_left_y)
-    tx_right, ty_right, tyaw_right, tc_right, csp_right = generate_target_course(boundary_right_x, boundary_right_y)
-    # tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
-    tx_ori, ty_ori, tyaw_ori, tc_ori, csp_ori = generate_target_course(wx, wy)
-
-
+def mini_cur_planning(wx, wy):
     # minimum curvature planning
+    tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
     total_dis_c = 0
     sampling_dis_c = 2.0
     sampling_num_c = int(csp.s[-1] // sampling_dis_c)
@@ -433,86 +483,103 @@ def main():
         smooth_x_c.append(pos_sc[i][0] + res.x[i] * phi_sc[i][0])
         smooth_y_c.append(pos_sc[i][1] + res.x[i] * phi_sc[i][1])
     tx_c, ty_c, tyaw_c, tc_c, csp_c = generate_target_course(smooth_x_c, smooth_y_c)
-    tx_shortest, ty_shortest = qp_shortest_path(wx, wy)
-    #labels = ['max_cur', 'reference line', 'shortest']
-    plt.plot(tx_c, ty_c, '-r', label="max_cur")
+    # x,y,yaw,k,config,P,Q
+    return tx_c, ty_c, tyaw_c, tc_c, csp_c, H_T, q_c
+
+
+def overall_path(wx, wy, p_short, q_short, p_minc, q_minc, w, ob):
+
+    tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
+    total_dis_c = 0
+    sampling_dis_c = 2.0
+    sampling_num_c = int(csp.s[-1] // sampling_dis_c)
+    pos_sc = []
+    phi_sc = []
+    l_c = np.array([-2.5 for i in range(sampling_num_c)])
+    l_c[0] = -0.1
+    l_c[-1] = -0.1
+    u_c = np.array([2.5 for i in range(sampling_num_c)])
+    u_c[0] = 0.1
+    u_c[-1] = 0.1
+    for i in range(sampling_num_c):
+
+        phi_c = csp.calc_norm(total_dis_c)
+        phi_tan = csp.calc_yaw(total_dis_c)
+        phi_sc.append(phi_c)
+        pos_c_x, pos_c_y = csp.calc_position(total_dis_c)
+        for j in range(len(ob)):
+            delta_x, delta_y = project_to_cur(pos_c_x, pos_c_y, phi_tan, ob[j][0], ob[j][1])
+            if -3.0 < delta_x < 15.0 and abs(delta_y) < 2.0:
+                if delta_y < 0.0:
+                    l_c[i] = delta_y + 2.5
+                if delta_y > 0.0:
+                    u_c[i] = delta_y - 2.5
+        pos_sc.append([pos_c_x, pos_c_y])
+        total_dis_c += sampling_dis_c
+    p_overall = w * p_short + (1-w) * p_minc
+    q_overall = w * q_short + (1-w) * q_minc
+
+    A_overall = sparse.csc_matrix(np.eye(sampling_num_c))
+    P_overall = sparse.csc_matrix(p_overall)
+    prob_c = osqp.OSQP()
+    # Setup workspace and change alpha parameter
+    prob_c.setup(P_overall, q_overall, A_overall, l_c, u_c, alpha=1.0)
+    # Solve problem
+    res = prob_c.solve()
+    smooth_x_c = []
+    smooth_y_c = []
+    for i in range(sampling_num_c):
+        smooth_x_c.append(pos_sc[i][0] + res.x[i] * phi_sc[i][0])
+        smooth_y_c.append(pos_sc[i][1] + res.x[i] * phi_sc[i][1])
+    tx_c, ty_c, tyaw_c, tc_c, csp_c = generate_target_course(smooth_x_c, smooth_y_c)
+    # x,y,yaw,k,config,P,Q
+    return tx_c, ty_c, tyaw_c, tc_c, csp_c
+
+
+def main():
+    print(__file__ + " start!!")
+
+    data = pd.read_csv(r"..\软件大赛——极速赛道规划控制\saic_2020.csv")
+    x_data = data['x']
+    y_data = data['y']
+    # way points
+    wx = x_data
+    wy = y_data
+    # obstacle lists
+    ob = np.array([[90.0934, 710.9762],
+                   [130.0934, 707.9762],
+                   ])
+
+    tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
+    tx_coarse, ty_coarse, tyaw_coarse, tc_coarse, csp_coarse = generate_coarse_course(wx, wy)
+    boundary_left_x = []
+    boundary_left_y = []
+    boundary_right_x = []
+    boundary_right_y = []
+    for i in range(len(csp_coarse.s)-1):
+        temp_pos = csp_coarse.calc_position(csp_coarse.s[i])
+        temp_norm = csp_coarse.calc_norm(csp_coarse.s[i])
+        boundary_left_x.append(temp_pos[0]+3*temp_norm[0]), boundary_left_y.append(temp_pos[1]+3*temp_norm[1])
+        boundary_right_x.append(temp_pos[0] - 3 * temp_norm[0]), boundary_right_y.append(temp_pos[1] - 3 * temp_norm[1])
+    tx_left, ty_left, tyaw_left, tc_left, csp_left = generate_target_course(boundary_left_x, boundary_left_y)
+    tx_right, ty_right, tyaw_right, tc_right, csp_right = generate_target_course(boundary_right_x, boundary_right_y)
+    # tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
+    tx_ori, ty_ori, tyaw_ori, tc_ori, csp_ori = generate_target_course(wx, wy)
+
+
+
+    tx_shortest, ty_shortest, _, _, csp_shortest, p_shortest, q_shortest = qp_shortest_path(wx, wy)
+    tx_minc, ty_minc, _, _, csp_minc, p_minc, q_minc = mini_cur_planning(wx, wy)
+    tx_overall, ty_overall, yaw_overall, k_overall, csp_overall = overall_path(wx, wy, p_shortest, q_shortest, p_minc, q_minc, 0.005, ob)
+    plt.plot(tx_overall, ty_overall, '-c', label='w = 0.005')
+    #plt.plot(tx_minc, ty_minc, '-r', label="min_cur")
     plt.plot(tx_ori, ty_ori, '-b', label="reference")
-    plt.plot(tx_shortest, ty_shortest, '-g', label="shortest")
+    #plt.plot(tx_shortest, ty_shortest, '-g', label="shortest")
     plt.plot(tx_left, ty_left, ':k')
     plt.plot(tx_right, ty_right, ':k')
+    plt.plot(ob[:, 0], ob[:, 1], 'oy')
     plt.legend()
-    plt.show()
-    # dp method
-    lateral_cand = [0.0]
 
-    for x in np.linspace(-2.5, 2.5, 40):
-        lateral_cand.append(x)
-    """lateral_cand = [0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75,
-                    -1, 1, -1.25, 1.25, 1.5, -1.5, -1.75, 1.75,
-                    -2, 2, -2.25, 2.25, -2.5, 2.5 ]  # lateral distance candidate"""
-
-    initial_norm = csp.calc_norm(0.0)
-    dp = [[point(tx[0] + x * initial_norm[0], ty[0] + x * initial_norm[1], cost=0, rtheta=math.pi/2) for x in lateral_cand]]
-    dp[0][0] = point(tx[0], ty[0], cost=0, rtheta=tyaw[0])
-    delta_s = 3.0  # sampling density
-    total_s = delta_s
-    w_coarse = 0.999
-    while total_s < csp.s[-1]:
-        norm_vec = csp.calc_norm(total_s)
-        ref_x, ref_y = csp.calc_position(total_s)
-        temp = []
-        for ind, lat_offset in enumerate(lateral_cand):
-            temp_x = ref_x + norm_vec[0] * lat_offset
-            temp_y = ref_y + norm_vec[1] * lat_offset
-            cur_cost = 10 ** 18
-            cur_route = point(temp_x, temp_y)
-            for ind_2 in range(len(lateral_cand)):
-                # calc cost from parent node to current node
-                par_x = dp[-1][ind_2].x
-                par_y = dp[-1][ind_2].y
-                dis = np.hypot(temp_x-par_x, temp_y-par_y)
-                tangent = [(temp_x-par_x)/dis, (temp_y-par_y)/dis]
-                cur_theta = math.atan2(tangent[1], tangent[0])
-                k = [(tangent[0]-dp[-1][ind_2].tangent[0])/dis, (tangent[1]-dp[-1][ind_2].tangent[1])/dis]
-                #np.hypot(k[0], k[1])
-                acosvalue = tangent[0] * dp[-1][ind_2].tangent[0] + tangent[1] * dp[-1][ind_2].tangent[1]
-
-
-                if abs(acosvalue) > 1.0:
-                    acosvalue = 1.0 * np.sign(acosvalue)
-                # temp_cost = w_coarse * math.acos(acosvalue) / (dp[-1][ind_2].length + dis) + dp[-1][ind_2].cost + dis * (1-w_coarse)#
-                temp_cost = dp[-1][ind_2].cost + w_coarse * np.hypot(k[0], k[1])# dis  # * (1 - w_coarse)# 最大曲率
-                # temp_cost = dp[-1][ind_2].cost + dis #* (1 - w_coarse)# w_coarse * np.hypot(k[0], k[1]) +  # 最短路径
-
-                for i, pos in enumerate(ob):
-                    pro_x, pro_y = project_to_cur(temp_x, temp_y, cur_theta, pos[0], pos[1])
-                    if -3.0 < pro_x < 6.0 and abs(pro_y) < 3.0:
-                        temp_cost += 10**18         # 避障惩罚项
-                if temp_cost < cur_cost:
-                    cur_cost = temp_cost
-                    cur_route.length = dis
-                    cur_route.tangent = tangent
-                    cur_route.cost = temp_cost
-                    cur_route.parent = ind_2
-            temp.append(cur_route)
-        dp.append(temp)
-        total_s += delta_s
-
-    x_points = []
-    y_points = []
-    cur_node = min(dp[-1], key=lambda x:x.cost)
-    cur_node_n = -1
-    while cur_node.parent is not None:
-        x_points.append(cur_node.x)
-        y_points.append(cur_node.y)
-        cur_node_n -= 1
-        cur_node = dp[cur_node_n][cur_node.parent]
-    x_points.append(cur_node.x)
-    y_points.append(cur_node.y)
-    x_points.reverse()
-    y_points.reverse()
-    tx_opt, ty_opt, tyaw_opt, tc_opt, csp_opt = generate_coarse_course(x_points, y_points)
-    plt.plot(tx_opt, ty_opt, 'r-', tx_ori, ty_ori, 'b-')
     plt.show()
 
     # initial state
