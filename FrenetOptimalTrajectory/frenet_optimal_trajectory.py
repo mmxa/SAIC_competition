@@ -261,7 +261,7 @@ def generate_target_course(x, y):
 
 def generate_coarse_course(x, y):
     csp = cubic_spline_planner.Spline2D(x, y)
-    s = np.arange(0, csp.s[-1], 2)  # 2m取一个间隔点，利用dp进行基于reference line的轨迹优化， 并保证一定的计算速度
+    s = np.arange(0, csp.s[-1], 1)  # 2m取一个间隔点，利用dp进行基于reference line的轨迹优化， 并保证一定的计算速度
 
     rx, ry, ryaw, rk = [], [], [], []
     for i_s in s:  # 利用离散点x、y生成一条关于路程s的曲线？ 然后离散成x、y、yaw、curvature
@@ -294,24 +294,11 @@ class point:
             self.tangent = [math.cos(rtheta), math.sin(rtheta)]
 
 
-def main():
-    print(__file__ + " start!!")
+def qp_shortest_path(wx, wy):
 
-    data = pd.read_csv(r"..\软件大赛——极速赛道规划控制\saic_2020.csv")
-    x_data = data['x']
-    y_data = data['y']
-    # way points
-    wx = x_data
-    wy = y_data
-    # obstacle lists
-    ob = np.array([[90.0934, 710.9762],
-                   [130.0934, 707.9762],
-                   ])
-
-
-    tx, ty, tyaw, tc, csp = generate_coarse_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
+    tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
     # tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
-    tx_ori, ty_ori, tyaw_ori, tc_ori, csp_ori = generate_target_course(wx, wy)
+    # tx_ori, ty_ori, tyaw_ori, tc_ori, csp_ori = generate_target_course(wx, wy)
 
     # osqp for nearest route
     total_dis = 0.0
@@ -348,13 +335,13 @@ def main():
     A = sparse.csc_matrix(np.eye(sampling_num))
     l = np.array([-2.5 for i in range(sampling_num)])
     l[0] = -0.1
+    l[-1] = -0.1
     u = np.array([2.5 for i in range(sampling_num)])
     u[0] = 0.1
+    u[-1] = 0.1
     prob = osqp.OSQP()
-
     # Setup workspace and change alpha parameter
     prob.setup(P, q, A, l, u, alpha=1.0)
-
     # Solve problem
     res = prob.solve()
     print(res.x)
@@ -363,13 +350,101 @@ def main():
     for i in range(sampling_num):
         shortest_x.append(pos_s[i][0] + res.x[i] * phi_s[i][0])
         shortest_y.append(pos_s[i][1] + res.x[i] * phi_s[i][1])
+    tx_shortest, ty_shortest, tyaw_shortest, tc_shortest, csp_shortest = generate_target_course(shortest_x, shortest_y)
+    return tx_shortest, ty_shortest
+    #plt.plot(tx_shortest, ty_shortest, '-r', tx_ori, ty_ori, '-b')
+    #plt.show()
+
+def main():
+    print(__file__ + " start!!")
+
+    data = pd.read_csv(r"..\软件大赛——极速赛道规划控制\saic_2020.csv")
+    x_data = data['x']
+    y_data = data['y']
+    # way points
+    wx = x_data
+    wy = y_data
+    # obstacle lists
+    ob = np.array([[90.0934, 710.9762],
+                   [130.0934, 707.9762],
+                   ])
+    tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)  # 2m间隔的参考路径，可以计算每点的frenet坐标 法向量+切向量
+    tx_coarse, ty_coarse, tyaw_coarse, tc_coarse, csp_coarse = generate_coarse_course(wx, wy)
+    boundary_left_x = []
+    boundary_left_y = []
+    boundary_right_x = []
+    boundary_right_y = []
+    for i in range(len(csp_coarse.s)-1):
+        temp_pos = csp_coarse.calc_position(csp_coarse.s[i])
+        temp_norm = csp_coarse.calc_norm(csp_coarse.s[i])
+        boundary_left_x.append(temp_pos[0]+3*temp_norm[0]), boundary_left_y.append(temp_pos[1]+3*temp_norm[1])
+        boundary_right_x.append(temp_pos[0] - 3 * temp_norm[0]), boundary_right_y.append(temp_pos[1] - 3 * temp_norm[1])
+    tx_left, ty_left, tyaw_left, tc_left, csp_left = generate_target_course(boundary_left_x, boundary_left_y)
+    tx_right, ty_right, tyaw_right, tc_right, csp_right = generate_target_course(boundary_right_x, boundary_right_y)
+    # tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
+    tx_ori, ty_ori, tyaw_ori, tc_ori, csp_ori = generate_target_course(wx, wy)
 
 
+    # minimum curvature planning
+    total_dis_c = 0
+    sampling_dis_c = 2.0
+    sampling_num_c = int(csp.s[-1] // sampling_dis_c)
+    D = np.zeros([sampling_num_c-2, sampling_num_c])
+    di_x = np.zeros([sampling_num_c, sampling_num_c])
+    di_y = np.zeros([sampling_num_c, sampling_num_c])
+    x_r = np.zeros([sampling_num_c, 1])
+    y_r =np.zeros([sampling_num_c, 1])
+    for i in range(sampling_num_c-2):
+        D[i][i] = D[i][i+2] = 1.0
+        D[i][i+1] = -2.0
+    pos_sc = []
+    phi_sc = []
+    for i in range(sampling_num_c):
+        phi_c = csp.calc_norm(total_dis_c)
+        phi_sc.append(phi_c)
+        pos_c_x, pos_c_y = csp.calc_position(total_dis_c)
+        pos_sc.append([pos_c_x, pos_c_y])
+        di_x[i][i] = phi_c[0]
+        di_y[i][i] = phi_c[1]
+        x_r[i][0] = pos_c_x
+        y_r[i][0] = pos_c_y
+        total_dis_c += sampling_dis_c
+    D *= 0.5
+    H_T = 2.0 * np.dot(np.dot(np.dot(di_x.T, D.T), D), di_x) + np.dot(np.dot(np.dot(di_y.T, D.T), D), di_y)
+    B_T = 2 * np.dot(np.dot(np.dot(x_r.T, D.T), D), di_x) + 2 * np.dot(np.dot(np.dot(y_r.T, D.T), D), di_y)
+    P_c = sparse.csc_matrix(H_T)
+    q_c = B_T[0]
+    A_c = sparse.csc_matrix(np.eye(sampling_num_c))
+    l_c = np.array([-2.5 for i in range(sampling_num_c)])
+    l_c[0] = -0.1
+    l_c[-1] = -0.1
+    u_c = np.array([2.5 for i in range(sampling_num_c)])
+    u_c[0] = 0.1
+    u_c[-1] = 0.1
+    prob_c = osqp.OSQP()
+    # Setup workspace and change alpha parameter
+    prob_c.setup(P_c, q_c, A_c, l_c, u_c, alpha=1.0)
+    # Solve problem
+    res = prob_c.solve()
+    print(res.x)
+    smooth_x_c = []
+    smooth_y_c = []
+    for i in range(sampling_num_c):
+        smooth_x_c.append(pos_sc[i][0] + res.x[i] * phi_sc[i][0])
+        smooth_y_c.append(pos_sc[i][1] + res.x[i] * phi_sc[i][1])
+    tx_c, ty_c, tyaw_c, tc_c, csp_c = generate_target_course(smooth_x_c, smooth_y_c)
+    tx_shortest, ty_shortest = qp_shortest_path(wx, wy)
+    #labels = ['max_cur', 'reference line', 'shortest']
+    plt.plot(tx_c, ty_c, '-r', label="max_cur")
+    plt.plot(tx_ori, ty_ori, '-b', label="reference")
+    plt.plot(tx_shortest, ty_shortest, '-g', label="shortest")
+    plt.plot(tx_left, ty_left, ':k')
+    plt.plot(tx_right, ty_right, ':k')
+    plt.legend()
+    plt.show()
     # dp method
     lateral_cand = [0.0]
-    tx_shortest, ty_shortest, tyaw_shortest, tc_shortest, csp_shortest = generate_target_course(shortest_x, shortest_y)
-    plt.plot(tx_shortest, ty_shortest, '-r', tx_ori, ty_ori, '-b')
-    plt.show()
+
     for x in np.linspace(-2.5, 2.5, 40):
         lateral_cand.append(x)
     """lateral_cand = [0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75,
