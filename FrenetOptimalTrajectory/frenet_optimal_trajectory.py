@@ -1,8 +1,10 @@
 """
 
 Frenet optimal trajectory generator
-
-author: Atsushi Sakai (@Atsushi_twi)
+path plan for a track by Quadratic programming
+author : Meng xz
+date: 2020.07.27
+original author: Atsushi Sakai (@Atsushi_twi)
 
 Ref:
 
@@ -126,8 +128,8 @@ def calc_frenet_paths(c_speed, c_d, c_d_d, c_d_dd, s0):
     frenet_paths = []
 
     # generate path to each offset goal
-    for di in np.arange(-MAX_ROAD_WIDTH, MAX_ROAD_WIDTH, D_ROAD_W):
-
+    #for di in np.arange(-MAX_ROAD_WIDTH, MAX_ROAD_WIDTH, D_ROAD_W):
+    for di in np.arange(1):
         # Lateral motion planning
         for Ti in np.arange(MINT, MAXT, DT):
             fp = Frenet_path()
@@ -293,6 +295,46 @@ class point:
         if parent == None:
             self.tangent = [math.cos(rtheta), math.sin(rtheta)]
 
+
+def quadratic(a,b,c):
+    delta = b**2 - 4 * a * c
+    x1 = (-b + math.sqrt(delta))/(2*a)
+    x2 = (-b - math.sqrt(delta))/(2*a)
+    return x1, x2
+
+
+def calc_allowed_speed(k):
+    x1, x2 = quadratic(abs(k)-0.0002, -0.0033, -4.009)
+    if min(x1,x2)>0:
+        return min(x1,x2)
+    if x1 > 0:
+        return x1
+    if x2 > 0:
+        return x2
+    return 25.0
+
+def check_speed_lat(v, k):
+    a = v**2 * abs(k)
+    allowed_a = 0.0002*v**2 +0.0033 *v +4.0090
+    if allowed_a > a:
+        return True
+    return False
+
+def calc_t(v0, a0=0, s=2.0):
+    if a0 == 0:
+        return s/v0
+    if a0>0:
+        return (math.sqrt(v0**2 + 4*a0)-v0)/a0
+
+    return (math.sqrt(v0**2 + 4*a0)-v0)/a0
+
+class speed_point:
+    def __init__(self, v, a=0, k=0.0, t=1.0, s=0):
+        self.v = v
+        self.a = a
+        self.k = k
+        self.t = t
+        self.s = s
 
 def dp_plan_path(wx, wy, ob):
     # dp method
@@ -495,10 +537,10 @@ def overall_path(wx, wy, p_short, q_short, p_minc, q_minc, w, ob):
     sampling_num_c = int(csp.s[-1] // sampling_dis_c)
     pos_sc = []
     phi_sc = []
-    l_c = np.array([-2.5 for i in range(sampling_num_c)])
+    l_c = np.array([-2.1 for i in range(sampling_num_c)])
     l_c[0] = -0.1
     l_c[-1] = -0.1
-    u_c = np.array([2.5 for i in range(sampling_num_c)])
+    u_c = np.array([2.1 for i in range(sampling_num_c)])
     u_c[0] = 0.1
     u_c[-1] = 0.1
     for i in range(sampling_num_c):
@@ -511,9 +553,9 @@ def overall_path(wx, wy, p_short, q_short, p_minc, q_minc, w, ob):
             delta_x, delta_y = project_to_cur(pos_c_x, pos_c_y, phi_tan, ob[j][0], ob[j][1])
             if -3.0 < delta_x < 15.0 and abs(delta_y) < 2.0:
                 if delta_y < 0.0:
-                    l_c[i] = delta_y + 2.5
+                    l_c[i] = delta_y + 2.1
                 if delta_y > 0.0:
-                    u_c[i] = delta_y - 2.5
+                    u_c[i] = delta_y - 2.1
         pos_sc.append([pos_c_x, pos_c_y])
         total_dis_c += sampling_dis_c
     p_overall = w * p_short + (1-w) * p_minc
@@ -566,24 +608,45 @@ def main():
     # tx, ty, tyaw, tc, csp = generate_target_course(wx, wy)
     tx_ori, ty_ori, tyaw_ori, tc_ori, csp_ori = generate_target_course(wx, wy)
 
-
-
     tx_shortest, ty_shortest, _, _, csp_shortest, p_shortest, q_shortest = qp_shortest_path(wx, wy)
     tx_minc, ty_minc, _, _, csp_minc, p_minc, q_minc = mini_cur_planning(wx, wy)
-    tx_overall, ty_overall, yaw_overall, k_overall, csp_overall = overall_path(wx, wy, p_shortest, q_shortest, p_minc, q_minc, 0.005, ob)
-    plt.plot(tx_overall, ty_overall, '-c', label='w = 0.005')
-    #plt.plot(tx_minc, ty_minc, '-r', label="min_cur")
+    tx_overall, ty_overall, yaw_overall, k_overall, csp_overall = overall_path(wx, wy, p_shortest, q_shortest, p_minc, q_minc, 0.003, ob)
+    plt.plot(tx_overall, ty_overall, '-c', label='w = 0.003')
+    plt.plot(tx_minc, ty_minc, '-r', label="min_cur")
     plt.plot(tx_ori, ty_ori, '-b', label="reference")
-    #plt.plot(tx_shortest, ty_shortest, '-g', label="shortest")
+    plt.plot(tx_shortest, ty_shortest, '-g', label="shortest")
     plt.plot(tx_left, ty_left, ':k')
     plt.plot(tx_right, ty_right, ':k')
     plt.plot(ob[:, 0], ob[:, 1], 'oy')
     plt.legend()
-
     plt.show()
+    # speed profile: 采用一种预瞄策略进行速度规划：
+    total_dis = 0.0
+    sampling_dis = 2.0
+    v0 = 0
+    a0 = 6.0
+    sampling_n = int(csp_overall.s[-1] // sampling_dis)
+    sampling_pos_s = [total_dis + sampling_dis * i for i in range(sampling_n)]
+    sampling_cur = [csp_overall.calc_curvature(x) for x in sampling_pos_s]
+    speeds = [speed_point(v0, a0, csp_overall.calc_curvature(total_dis), calc_t(v0, a0, sampling_dis, total_dis))]
+    for i in range(sampling_n-1):
 
-    # initial state
-    c_speed = 40.0 / 3.6  # current speed [m/s]
+        cur_speed = speeds[-1].v + speeds[-1].a * speeds[-1].t
+        max_preview_speed = 100
+        for j in range(1, 40):     # 80m for speed preview
+            preview_s = sampling_pos_s[i+j]
+            preview_k = sampling_cur[i+j]
+            if not check_speed_lat(cur_speed, preview_k):
+                # deduce cur speed from allowed speed:
+                allowed_speed = calc_allowed_speed(preview_k)
+                for k in range(1, j):
+                    # 反推前一时刻的速度
+
+                    pass
+
+
+"""    # initial state
+    c_speed = 0.0 / 3.6  # current speed [m/s]
     c_d = 0.0  # current lateral position [m]
     c_d_d = 0.0  # current lateral speed [m/s]
     c_d_dd = 0.0  # current latral acceleration [m/s]
@@ -593,7 +656,7 @@ def main():
 
     for i in range(SIM_LOOP):
         path = frenet_optimal_planning(
-            csp, s0, c_speed, c_d, c_d_d, c_d_dd, ob)
+            csp_overall, s0, c_speed, c_d, c_d_d, c_d_dd, ob)
 
         s0 = path.s[1]
         c_d = path.d[1]
@@ -625,7 +688,7 @@ def main():
         plt.grid(True)
         plt.pause(0.0001)
         plt.show()
-
+"""
 
 if __name__ == '__main__':
     main()
