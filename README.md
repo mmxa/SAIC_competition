@@ -2,10 +2,13 @@
 2020 SAIC software challange 
 which question: ***mission 1-3***
  
-## To do:
-1. 寻找最优路线：目标函数如何确定？ 目前基于frenet坐标下具有的目标函数是否够用？
-2. 考虑车辆动力学约束，轮胎摩擦圆，最大侧向力限制等
-3. 当前frenet规划基于预先设定的采样密度，可能存在无法规划出路线的结果
+## Done:
+1. reference line 生成:基于三次样条曲线转化为Frenet坐标系下的分段样条曲线；
+2. 寻找最优路线：利用最小曲率与最短距离作为目标函数，利用osqp求解二次规划问题；
+<div  align="center">    
+	<img src="./max_curvature.png" width = "500" height = "400" alt="最小曲率与参考车道线" align=center />  
+ </div>
+   
  
 ### reference:
 1. https://github.com/AtsushiSakai/PythonRobotics
